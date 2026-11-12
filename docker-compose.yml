@@ -1,0 +1,24 @@
+# Levanta todo con:  docker compose up --build
+# Frontend: http://localhost:8080   ·   API: http://localhost:4000
+services:
+  backend:
+    build: ./backend
+    environment:
+      PORT: 4000
+      DATABASE_URL: "file:/data/fitstrategy.db"
+      JWT_SECRET: ${JWT_SECRET:-cambia-este-secreto}
+      CORS_ORIGIN: "http://localhost:8080,http://localhost:5173"
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      PLAYER_PASSWORD: ${PLAYER_PASSWORD:-jugador123}
+    volumes:
+      - fitdata:/data
+    ports:
+      - "4000:4000"
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+volumes:
+  fitdata:

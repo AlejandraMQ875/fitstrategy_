@@ -1,0 +1,166 @@
+// SQLite para desarrollo. Para PostgreSQL: cambia provider a "postgresql" y DATABASE_URL a tu cadena de conexión.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  username     String @unique
+  passwordHash String
+  role         String // 'player' | 'admin'
+  gymId        Int?   @unique
+  gym          Gym?   @relation(fields: [gymId], references: [id])
+}
+
+model Gym {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  color         String
+  zone          String   @default("Zona Sur")
+  cash          Float
+  debt          Float
+  reputation    Float
+  satisfaction  Float
+  retention     Float
+  members       Int
+  price         Float
+  machineLevel  Int
+  instructors   Int
+  specialists   Int
+  receptionists Int
+  cleaners      Int
+  lockerLevel   Int
+  spaceLevel    Int
+  branches      Int
+  cumNetIncome  Float    @default(0)
+  lastNetIncome Float    @default(0)
+  collabsWon    Int      @default(0)
+  user          User?
+  services      GymService[]
+  decisions     Decision[]
+  bids          Bid[]
+  results       Result[]
+  snapshots     RankingSnapshot[]
+}
+
+model Round {
+  id             Int       @id @default(autoincrement())
+  number         Int       @unique
+  month          String
+  seasonalFactor Float
+  status         String    @default("pending") // pending | open | processing | closed
+  durationMin    Int?
+  openedAt       DateTime?
+  endsAt         DateTime?
+  processedAt    DateTime?
+  decisions      Decision[]
+  bids           Bid[]
+  results        Result[]
+  snapshots      RankingSnapshot[]
+}
+
+// Las pujas viajan dentro del payload JSON de la decisión (campo bids) y se materializan en Bid al procesar.
+model Decision {
+  id        Int      @id @default(autoincrement())
+  roundId   Int
+  gymId     Int
+  payload   String
+  updatedAt DateTime @updatedAt
+  round     Round    @relation(fields: [roundId], references: [id])
+  gym       Gym      @relation(fields: [gymId], references: [id])
+
+  @@unique([roundId, gymId])
+}
+
+model Collaboration {
+  id             Int    @id @default(autoincrement())
+  key            String @unique
+  name           String
+  sector         String
+  category       String // 'A' | 'B'
+  cost           Float
+  duration       Int
+  effectJson     String
+  holdersJson    String @default("[]") // [{gymId, factor, amount, startRound}] (varios si hay empate -> 50%)
+  expiresAtRound Int    @default(0)
+  bids           Bid[]
+}
+
+model Bid {
+  id              Int           @id @default(autoincrement())
+  roundId         Int
+  gymId           Int
+  collaborationId Int
+  amount          Float
+  outcome         String        @default("pending") // won | shared | lost | rejected
+  round           Round         @relation(fields: [roundId], references: [id])
+  gym             Gym           @relation(fields: [gymId], references: [id])
+  collaboration   Collaboration @relation(fields: [collaborationId], references: [id])
+
+  @@unique([roundId, gymId, collaborationId])
+}
+
+model Service {
+  id              Int    @id @default(autoincrement())
+  key             String @unique
+  name            String
+  costImpl        Float
+  costPerRound    Float
+  requirementJson String
+  effectJson      String
+  gymServices     GymService[]
+}
+
+model GymService {
+  id               Int     @id @default(autoincrement())
+  gymId            Int
+  serviceId        Int
+  activatedAtRound Int
+  gym              Gym     @relation(fields: [gymId], references: [id])
+  service          Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([gymId, serviceId])
+}
+
+model Result {
+  id          Int    @id @default(autoincrement())
+  roundId     Int
+  gymId       Int
+  revenue     Float
+  costs       Float
+  ebitda      Float
+  netIncome   Float
+  cashEnd     Float
+  membersEnd  Int
+  detailJson  String
+  round       Round  @relation(fields: [roundId], references: [id])
+  gym         Gym    @relation(fields: [gymId], references: [id])
+
+  @@unique([roundId, gymId])
+}
+
+model RankingSnapshot {
+  id            Int    @id @default(autoincrement())
+  roundId       Int
+  gymId         Int
+  fige          Float
+  rank          Int
+  breakdownJson String
+  round         Round  @relation(fields: [roundId], references: [id])
+  gym           Gym    @relation(fields: [gymId], references: [id])
+
+  @@unique([roundId, gymId])
+}
+
+model EventLog {
+  id          Int      @id @default(autoincrement())
+  at          DateTime @default(now())
+  type        String
+  message     String
+  roundNumber Int?
+}

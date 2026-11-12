@@ -1,0 +1,21 @@
+# Blueprint de Render: un solo servicio web sirve API + frontend compilado.
+services:
+  - type: web
+    name: fitstrategy
+    runtime: node
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate && npx prisma db push
+    startCommand: cd backend && (node -e "import('./src/db.js').then(async({prisma})=>{process.exit((await prisma.gym.count())?0:1)})" || node src/seed.js) && node src/index.js
+    envVars:
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: STATIC_DIR
+        value: ../frontend/dist
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PLAYER_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        value: "*"

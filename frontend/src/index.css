@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-chalk text-ink font-sans antialiased; }
+h1, h2, h3 { @apply font-display tracking-tight; }
+.card { @apply bg-white border border-line rounded-lg p-4; }
+.btn { @apply inline-flex items-center justify-center rounded-md px-4 py-2 font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-court; }
+.btn-primary { @apply bg-court text-white hover:bg-blue-700; }
+.btn-dark { @apply bg-ink text-white hover:bg-black; }
+.btn-ghost { @apply border border-line bg-white hover:bg-chalk; }
+.btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+.input { @apply w-full rounded-md border border-line bg-white px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-court; }
+.label { @apply block text-sm font-medium text-steel mb-1; }
+.num { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
